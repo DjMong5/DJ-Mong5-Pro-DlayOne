@@ -24,7 +24,7 @@ jobs:
       run: ctest --test-dir build -C Release --output-on-failure || true
 
     - name: Salvar o VST3 para Download
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: MeuPlugin-Windows-VST3
         path: build/
