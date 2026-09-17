@@ -1,0 +1,5 @@
+if(EXISTS "/workspaces/codespaces-blank/meu-vst3/build/Benchmarks-b12d07c_tests.cmake")
+  include("/workspaces/codespaces-blank/meu-vst3/build/Benchmarks-b12d07c_tests.cmake")
+else()
+  add_test(Benchmarks_NOT_BUILT-b12d07c Benchmarks_NOT_BUILT-b12d07c)
+endif()
