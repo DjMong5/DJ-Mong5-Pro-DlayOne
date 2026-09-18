@@ -5,38 +5,57 @@ PluginEditor::PluginEditor (PluginProcessor& p)
 {
     juce::ignoreUnused (processorRef);
 
-    // 1. Delay Time
-    delayTimeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    delayTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    addAndMakeVisible(delayTimeSlider);
+    // Função auxiliar para configurar Knobs
+    auto setupKnob = [this](juce::Slider& slider, juce::Label& label, const juce::String& name)
+    {
+        slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+        slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 70, 18);
+        addAndMakeVisible(slider);
 
-    delayTimeLabel.setText("Delay Time", juce::dontSendNotification);
-    delayTimeLabel.setJustificationType(juce::Justification::centred);
-    addAndMakeVisible(delayTimeLabel);
+        label.setText(name, juce::dontSendNotification);
+        label.setJustificationType(juce::Justification::centred);
+        addAndMakeVisible(label);
+    };
 
-    delayTimeAttachment = std::make_unique<SliderAttachment>(processorRef.apvts, "delayTime", delayTimeSlider);
+    // Função auxiliar para configurar Botões
+    auto setupButton = [this](juce::ToggleButton& button)
+    {
+        button.setClickingTogglesState(true);
+        addAndMakeVisible(button);
+    };
 
-    // 2. Feedback
-    feedbackSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    feedbackSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    addAndMakeVisible(feedbackSlider);
+    // 1. Configuração dos Knobs
+    setupKnob(inputDriveSlider, inputDriveLabel, "Input Drive");
+    setupKnob(delayTimeSlider, delayTimeLabel, "Delay Time");
+    setupKnob(feedbackSlider, feedbackLabel, "Feedback");
+    setupKnob(mixSlider, mixLabel, "Mix");
+    setupKnob(hpfSlider, hpfLabel, "HPF");
+    setupKnob(lpfSlider, lpfLabel, "LPF");
+    setupKnob(rateModSlider, rateModLabel, "Rate Mod");
+    setupKnob(outputGainSlider, outputGainLabel, "Output Gain");
 
-    feedbackLabel.setText("Feedback", juce::dontSendNotification);
-    feedbackLabel.setJustificationType(juce::Justification::centred);
-    addAndMakeVisible(feedbackLabel);
+    // 2. Configuração dos Botões
+    setupButton(powerBypassButton);
+    setupButton(pingPongButton);
+    setupButton(tempoSyncButton);
+    setupButton(saturationButton);
 
-    feedbackAttachment = std::make_unique<SliderAttachment>(processorRef.apvts, "feedback", feedbackSlider);
+    // 3. Vínculos com o APVTS
+    auto& apvts = processorRef.getAPVTS();
 
-    // 3. Mix
-    mixSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    mixSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    addAndMakeVisible(mixSlider);
+    inputDriveAttachment = std::make_unique<SliderAttachment>(apvts, "INPUT_DRIVE", inputDriveSlider);
+    delayTimeAttachment  = std::make_unique<SliderAttachment>(apvts, "DELAY_TIME", delayTimeSlider);
+    feedbackAttachment   = std::make_unique<SliderAttachment>(apvts, "FEEDBACK", feedbackSlider);
+    mixAttachment        = std::make_unique<SliderAttachment>(apvts, "MIX", mixSlider);
+    hpfAttachment        = std::make_unique<SliderAttachment>(apvts, "HPF", hpfSlider);
+    lpfAttachment        = std::make_unique<SliderAttachment>(apvts, "LPF", lpfSlider);
+    rateModAttachment    = std::make_unique<SliderAttachment>(apvts, "RATE_MOD", rateModSlider);
+    outputGainAttachment = std::make_unique<SliderAttachment>(apvts, "OUTPUT_GAIN", outputGainSlider);
 
-    mixLabel.setText("Mix", juce::dontSendNotification);
-    mixLabel.setJustificationType(juce::Justification::centred);
-    addAndMakeVisible(mixLabel);
-
-    mixAttachment = std::make_unique<SliderAttachment>(processorRef.apvts, "mix", mixSlider);
+    powerBypassAttachment = std::make_unique<ButtonAttachment>(apvts, "POWER_BYPASS", powerBypassButton);
+    pingPongAttachment    = std::make_unique<ButtonAttachment>(apvts, "PING_PONG", pingPongButton);
+    tempoSyncAttachment   = std::make_unique<ButtonAttachment>(apvts, "TEMPO_SYNC", tempoSyncButton);
+    saturationAttachment  = std::make_unique<ButtonAttachment>(apvts, "SATURATION_TAPE", saturationButton);
 
     // Melatonin Inspector
     addAndMakeVisible (inspectButton);
@@ -49,38 +68,61 @@ PluginEditor::PluginEditor (PluginProcessor& p)
         inspector->setVisible (true);
     };
 
-    setSize (500, 300);
+    setSize (800, 420);
 }
 
 PluginEditor::~PluginEditor() {}
 
 void PluginEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::darkgrey);
+    g.fillAll (juce::Colour (0xff2b2d31));
+
     g.setColour (juce::Colours::white);
-    g.setFont (20.0f);
-    g.drawText ("DELAY PLUGIN", getLocalBounds().removeFromTop(40), juce::Justification::centred, false);
+    g.setFont (22.0f);
+    g.drawText ("DJ MONG5 PRO DLAYONE", getLocalBounds().removeFromTop(45), juce::Justification::centred, false);
 }
 
 void PluginEditor::resized()
 {
     auto area = getLocalBounds();
-    area.removeFromTop(40);
+    area.removeFromTop(45);
 
     auto bottomArea = area.removeFromBottom(40);
-    inspectButton.setBounds (bottomArea.withSizeKeepingCentre(120, 30));
+    inspectButton.setBounds (bottomArea.withSizeKeepingCentre(120, 28));
 
-    auto sliderWidth = area.getWidth() / 3;
+    // Linha inferior de botões
+    auto buttonArea = area.removeFromBottom(50);
+    int buttonWidth = buttonArea.getWidth() / 4;
 
-    auto delayArea = area.removeFromLeft(sliderWidth);
-    delayTimeLabel.setBounds(delayArea.removeFromTop(20));
-    delayTimeSlider.setBounds(delayArea);
+    powerBypassButton.setBounds(buttonArea.removeFromLeft(buttonWidth).reduced(10, 5));
+    pingPongButton.setBounds(buttonArea.removeFromLeft(buttonWidth).reduced(10, 5));
+    tempoSyncButton.setBounds(buttonArea.removeFromLeft(buttonWidth).reduced(10, 5));
+    saturationButton.setBounds(buttonArea.reduced(10, 5));
 
-    auto feedbackArea = area.removeFromLeft(sliderWidth);
-    feedbackLabel.setBounds(feedbackArea.removeFromTop(20));
-    feedbackSlider.setBounds(feedbackArea);
+    // Espaço central do visor gráfico
+    auto displayArea = area.removeFromTop(70).reduced(150, 5);
 
-    auto mixArea = area;
-    mixLabel.setBounds(mixArea.removeFromTop(20));
-    mixSlider.setBounds(mixArea);
+    // Grid dos Knobs (2x4)
+    int colWidth = area.getWidth() / 4;
+    int rowHeight = area.getHeight() / 2;
+
+    auto row1 = area.removeFromTop(rowHeight);
+    auto row2 = area;
+
+    auto placeKnob = [](juce::Rectangle<int> bounds, juce::Label& label, juce::Slider& slider) {
+        label.setBounds(bounds.removeFromTop(18));
+        slider.setBounds(bounds);
+    };
+
+    // Linha 1
+    placeKnob(row1.removeFromLeft(colWidth).reduced(5), inputDriveLabel, inputDriveSlider);
+    placeKnob(row1.removeFromLeft(colWidth).reduced(5), delayTimeLabel, delayTimeSlider);
+    placeKnob(row1.removeFromLeft(colWidth).reduced(5), feedbackLabel, feedbackSlider);
+    placeKnob(row1.reduced(5), mixLabel, mixSlider);
+
+    // Linha 2
+    placeKnob(row2.removeFromLeft(colWidth).reduced(5), hpfLabel, hpfSlider);
+    placeKnob(row2.removeFromLeft(colWidth).reduced(5), lpfLabel, lpfSlider);
+    placeKnob(row2.removeFromLeft(colWidth).reduced(5), rateModLabel, rateModSlider);
+    placeKnob(row2.reduced(5), outputGainLabel, outputGainSlider);
 }
