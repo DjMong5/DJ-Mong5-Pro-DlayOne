@@ -149,11 +149,12 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
         float delayedLeft  = delayLineLeft.popSample (0);
         float delayedRight = delayLineRight.popSample (0);
 
-        float feedbackLeftSample  = hpfLeft.processSample (0, delayedLeft);
-        feedbackLeftSample        = lpfLeft.processSample (0, feedbackLeftSample);
+        // Ajuste feito aqui: removido o argumento de canal '0' do processSample
+        float feedbackLeftSample  = hpfLeft.processSample (delayedLeft);
+        feedbackLeftSample        = lpfLeft.processSample (feedbackLeftSample);
 
-        float feedbackRightSample = hpfRight.processSample (0, delayedRight);
-        feedbackRightSample       = lpfRight.processSample (0, feedbackRightSample);
+        float feedbackRightSample = hpfRight.processSample (delayedRight);
+        feedbackRightSample       = lpfRight.processSample (feedbackRightSample);
 
         if (isSaturation)
         {
