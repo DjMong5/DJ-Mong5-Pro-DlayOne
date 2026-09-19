@@ -32,7 +32,6 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    // Método para o Editor aceder ao APVTS
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
 
 private:
@@ -43,17 +42,10 @@ private:
     juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear> delayLineLeft { 192000 };
     juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear> delayLineRight { 192000 };
 
-    // Ponteiros de parâmetros para os filtros
-    juce::dsp::StateVariableFilter::Parameters<float>::Ptr hpfLeftParams  { new juce::dsp::StateVariableFilter::Parameters<float>() };
-    juce::dsp::StateVariableFilter::Parameters<float>::Ptr hpfRightParams { new juce::dsp::StateVariableFilter::Parameters<float>() };
-    juce::dsp::StateVariableFilter::Parameters<float>::Ptr lpfLeftParams  { new juce::dsp::StateVariableFilter::Parameters<float>() };
-    juce::dsp::StateVariableFilter::Parameters<float>::Ptr lpfRightParams { new juce::dsp::StateVariableFilter::Parameters<float>() };
+    // Filtros IIR padrão do JUCE (Estável e simples)
+    juce::dsp::IIR::Filter<float> hpfLeft, hpfRight;
+    juce::dsp::IIR::Filter<float> lpfLeft, lpfRight;
 
-    // Instâncias dos Filtros
-    juce::dsp::StateVariableFilter::Filter<float> hpfLeft, hpfRight;
-    juce::dsp::StateVariableFilter::Filter<float> lpfLeft, lpfRight;
-
-    // Amostras de Feedback acumuladas
     float lastFeedbackLeft { 0.0f };
     float lastFeedbackRight { 0.0f };
 
