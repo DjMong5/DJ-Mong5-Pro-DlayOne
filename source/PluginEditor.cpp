@@ -1,128 +1,126 @@
+#include "PluginProcessor.h"
 #include "PluginEditor.h"
 
 PluginEditor::PluginEditor (PluginProcessor& p)
-    : AudioProcessorEditor (&p), processorRef (p)
+    : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    juce::ignoreUnused (processorRef);
+    // Define a dimensão proporção estilo rack metálico (16:9 estendido)
+    setSize (1000, 500);
 
-    // Função auxiliar para configurar Knobs
-    auto setupKnob = [this](juce::Slider& slider, juce::Label& label, const juce::String& name)
+    // Função lambda auxiliar para configurar Knobs
+    auto setupKnob = [this](juce::Slider& slider, juce::Label& label)
     {
-        slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-        slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 70, 18);
-        addAndMakeVisible(slider);
+        slider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+        slider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 70, 20);
+        addAndMakeVisible (slider);
 
-        label.setText(name, juce::dontSendNotification);
-        label.setJustificationType(juce::Justification::centred);
-        addAndMakeVisible(label);
+        label.setFont (juce::FontOptions (12.0f, juce::Font::bold));
+        label.setJustificationType (juce::Justification::centred);
+        addAndMakeVisible (label);
     };
 
-    // Função auxiliar para configurar Botões
+    setupKnob (inputDriveSlider, inputDriveLabel);
+    setupKnob (delayTimeSlider, delayTimeLabel);
+    setupKnob (feedbackSlider, feedbackLabel);
+    setupKnob (hpfCutoffSlider, hpfCutoffLabel);
+    setupKnob (lpfCutoffSlider, lpfCutoffLabel);
+    setupKnob (mixSlider, mixLabel);
+
+    // Configuração dos Botões
     auto setupButton = [this](juce::ToggleButton& button)
     {
-        button.setClickingTogglesState(true);
-        addAndMakeVisible(button);
+        button.setClickingTogglesState (true);
+        addAndMakeVisible (button);
     };
 
-    // 1. Configuração dos Knobs
-    setupKnob(inputDriveSlider, inputDriveLabel, "Input Drive");
-    setupKnob(delayTimeSlider, delayTimeLabel, "Delay Time");
-    setupKnob(feedbackSlider, feedbackLabel, "Feedback");
-    setupKnob(mixSlider, mixLabel, "Mix");
-    setupKnob(hpfSlider, hpfLabel, "HPF");
-    setupKnob(lpfSlider, lpfLabel, "LPF");
-    setupKnob(rateModSlider, rateModLabel, "Rate Mod");
-    setupKnob(outputGainSlider, outputGainLabel, "Output Gain");
+    setupButton (powerBypassButton);
+    setupButton (pingPongButton);
+    setupButton (tempoSyncButton);
+    setupButton (saturationButton);
 
-    // 2. Configuração dos Botões
-    setupButton(powerBypassButton);
-    setupButton(pingPongButton);
-    setupButton(tempoSyncButton);
-    setupButton(saturationButton);
+    // Conectar com APVTS
+    auto& apvts = audioProcessor.getAPVTS();
 
-    // 3. Vínculos com o APVTS
-    auto& apvts = processorRef.getAPVTS();
+    inputDriveAttach = std::make_unique<SliderAttachment> (apvts, "inputDrive", inputDriveSlider);
+    delayTimeAttach  = std::make_unique<SliderAttachment> (apvts, "delayTime",  delayTimeSlider);
+    feedbackAttach   = std::make_unique<SliderAttachment> (apvts, "feedback",   feedbackSlider);
+    hpfCutoffAttach  = std::make_unique<SliderAttachment> (apvts, "hpfCutoff",  hpfCutoffSlider);
+    lpfCutoffAttach  = std::make_unique<SliderAttachment> (apvts, "lpfCutoff",  lpfCutoffSlider);
+    mixAttach        = std::make_unique<SliderAttachment> (apvts, "mix",        mixSlider);
 
-    inputDriveAttachment = std::make_unique<SliderAttachment>(apvts, "INPUT_DRIVE", inputDriveSlider);
-    delayTimeAttachment  = std::make_unique<SliderAttachment>(apvts, "DELAY_TIME", delayTimeSlider);
-    feedbackAttachment   = std::make_unique<SliderAttachment>(apvts, "FEEDBACK", feedbackSlider);
-    mixAttachment        = std::make_unique<SliderAttachment>(apvts, "MIX", mixSlider);
-    hpfAttachment        = std::make_unique<SliderAttachment>(apvts, "HPF", hpfSlider);
-    lpfAttachment        = std::make_unique<SliderAttachment>(apvts, "LPF", lpfSlider);
-    rateModAttachment    = std::make_unique<SliderAttachment>(apvts, "RATE_MOD", rateModSlider);
-    outputGainAttachment = std::make_unique<SliderAttachment>(apvts, "OUTPUT_GAIN", outputGainSlider);
-
-    powerBypassAttachment = std::make_unique<ButtonAttachment>(apvts, "POWER_BYPASS", powerBypassButton);
-    pingPongAttachment    = std::make_unique<ButtonAttachment>(apvts, "PING_PONG", pingPongButton);
-    tempoSyncAttachment   = std::make_unique<ButtonAttachment>(apvts, "TEMPO_SYNC", tempoSyncButton);
-    saturationAttachment  = std::make_unique<ButtonAttachment>(apvts, "SATURATION_TAPE", saturationButton);
-
-    // Melatonin Inspector
-    addAndMakeVisible (inspectButton);
-    inspectButton.onClick = [&] {
-        if (!inspector)
-        {
-            inspector = std::make_unique<melatonin::Inspector> (*this);
-            inspector->onClose = [this]() { inspector.reset(); };
-        }
-        inspector->setVisible (true);
-    };
-
-    setSize (800, 420);
+    powerBypassAttach = std::make_unique<ButtonAttachment> (apvts, "powerBypass",     powerBypassButton);
+    pingPongAttach    = std::make_unique<ButtonAttachment> (apvts, "pingPong",        pingPongButton);
+    tempoSyncAttach   = std::make_unique<ButtonAttachment> (apvts, "tempoSync",       tempoSyncButton);
+    saturationAttach  = std::make_unique<ButtonAttachment> (apvts, "saturationTape", saturationButton);
 }
 
-PluginEditor::~PluginEditor() {}
+PluginEditor::~PluginEditor()
+{
+}
 
 void PluginEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colour (0xff2b2d31));
+    // Fundo metálico escuro do rack
+    g.fillAll (juce::Colour (0xff1b1d20));
 
-    g.setColour (juce::Colours::white);
-    g.setFont (22.0f);
-    g.drawText ("DJ MONG5 PRO DLAYONE", getLocalBounds().removeFromTop(45), juce::Justification::centred, false);
+    // Moldura externa
+    g.setColour (juce::Colour (0xff3a3d42));
+    g.drawRect (getLocalBounds(), 4);
+
+    // Título Principal "DJ MONG5 PRO DLAYONE"
+    g.setColour (juce::Colours::whitesmoke);
+    g.setFont (juce::FontOptions (28.0f, juce::Font::bold));
+    g.drawText ("DJ MONG5 PRO DLAYONE", getLocalBounds().removeFromTop (60), juce::Justification::centred, true);
+
+    // Visor Central LCD (Ecrã de informações do Delay)
+    auto displayArea = juce::Rectangle<int> (280, 70, 440, 150);
+    g.setColour (juce::Colours::black);
+    g.fillRect (displayArea);
+    g.setColour (juce::Colour (0xff4a4e54));
+    g.drawRect (displayArea, 2);
+
+    // Textos informativos no ecrã visor (BPM, TIME, SYNC)
+    g.setColour (juce::Colours::cyan);
+    g.setFont (juce::FontOptions (14.0f));
+    g.drawText ("BPM: 128", displayArea.reduced (10), juce::Justification::topRight, true);
+    g.drawText ("TIME: 500ms", displayArea.reduced (10), juce::Justification::bottomLeft, true);
+    g.drawText ("SYNC: 1/4", displayArea.reduced (10), juce::Justification::bottomRight, true);
 }
 
 void PluginEditor::resized()
 {
-    auto area = getLocalBounds();
-    area.removeFromTop(45);
+    // Disposição dos Knobs
+    int knobWidth = 90;
+    int knobHeight = 90;
+    int labelHeight = 20;
+    int startY = 240;
 
-    auto bottomArea = area.removeFromBottom(40);
-    inspectButton.setBounds (bottomArea.withSizeKeepingCentre(120, 28));
+    // Fileira Superior de Controles
+    inputDriveSlider.setBounds (60,  startY, knobWidth, knobHeight);
+    inputDriveLabel.setBounds  (60,  startY + knobHeight, knobWidth, labelHeight);
 
-    // Linha inferior de botões
-    auto buttonArea = area.removeFromBottom(50);
-    int buttonWidth = buttonArea.getWidth() / 4;
+    delayTimeSlider.setBounds  (190, startY, knobWidth, knobHeight);
+    delayTimeLabel.setBounds   (190, startY + knobHeight, knobWidth, labelHeight);
 
-    powerBypassButton.setBounds(buttonArea.removeFromLeft(buttonWidth).reduced(10, 5));
-    pingPongButton.setBounds(buttonArea.removeFromLeft(buttonWidth).reduced(10, 5));
-    tempoSyncButton.setBounds(buttonArea.removeFromLeft(buttonWidth).reduced(10, 5));
-    saturationButton.setBounds(buttonArea.reduced(10, 5));
+    feedbackSlider.setBounds   (320, startY, knobWidth, knobHeight);
+    feedbackLabel.setBounds    (320, startY + knobHeight, knobWidth, labelHeight);
 
-    // Espaço central do visor gráfico
-    auto displayArea = area.removeFromTop(70).reduced(150, 5);
+    hpfCutoffSlider.setBounds  (590, startY, knobWidth, knobHeight);
+    hpfCutoffLabel.setBounds   (590, startY + knobHeight, knobWidth, labelHeight);
 
-    // Grid dos Knobs (2x4)
-    int colWidth = area.getWidth() / 4;
-    int rowHeight = area.getHeight() / 2;
+    lpfCutoffSlider.setBounds  (720, startY, knobWidth, knobHeight);
+    lpfCutoffLabel.setBounds   (720, startY + knobHeight, knobWidth, labelHeight);
 
-    auto row1 = area.removeFromTop(rowHeight);
-    auto row2 = area;
+    mixSlider.setBounds        (850, startY, knobWidth, knobHeight);
+    mixLabel.setBounds         (850, startY + knobHeight, knobWidth, labelHeight);
 
-    auto placeKnob = [](juce::Rectangle<int> bounds, juce::Label& label, juce::Slider& slider) {
-        label.setBounds(bounds.removeFromTop(18));
-        slider.setBounds(bounds);
-    };
+    // Fileira Inferior de Botões Alternadores (Switches)
+    int btnWidth = 140;
+    int btnHeight = 40;
+    int btnY = 420;
 
-    // Linha 1
-    placeKnob(row1.removeFromLeft(colWidth).reduced(5), inputDriveLabel, inputDriveSlider);
-    placeKnob(row1.removeFromLeft(colWidth).reduced(5), delayTimeLabel, delayTimeSlider);
-    placeKnob(row1.removeFromLeft(colWidth).reduced(5), feedbackLabel, feedbackSlider);
-    placeKnob(row1.reduced(5), mixLabel, mixSlider);
-
-    // Linha 2
-    placeKnob(row2.removeFromLeft(colWidth).reduced(5), hpfLabel, hpfSlider);
-    placeKnob(row2.removeFromLeft(colWidth).reduced(5), lpfLabel, lpfSlider);
-    placeKnob(row2.removeFromLeft(colWidth).reduced(5), rateModLabel, rateModSlider);
-    placeKnob(row2.reduced(5), outputGainLabel, outputGainSlider);
+    powerBypassButton.setBounds (100, btnY, btnWidth, btnHeight);
+    pingPongButton.setBounds    (310, btnY, btnWidth, btnHeight);
+    tempoSyncButton.setBounds   (520, btnY, btnWidth, btnHeight);
+    saturationButton.setBounds  (730, btnY, btnWidth, btnHeight);
 }
