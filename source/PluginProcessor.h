@@ -3,7 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
 
-class PluginProcessor  : public juce::AudioProcessor
+class PluginProcessor : public juce::AudioProcessor
 {
 public:
     PluginProcessor();
@@ -38,7 +38,7 @@ private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::AudioProcessorValueTreeState apvts;
 
-    // --- Módulos DSP do Diagrama ---
+    // --- Modulos DSP do Diagrama ---
     juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear> delayLineLeft { 192000 };
     juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear> delayLineRight { 192000 };
 
@@ -46,8 +46,8 @@ private:
     juce::dsp::StateVariableTPTFilter<float> hpfLeft, hpfRight;
     juce::dsp::StateVariableTPTFilter<float> lpfLeft, lpfRight;
 
-    // Memória de Feedback (Substitui variáveis estáticas locais)
-    float feedbackLeftSample  = 0.0f;
+    // Memoria de Feedback
+    float feedbackLeftSample = 0.0f;
     float feedbackRightSample = 0.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
