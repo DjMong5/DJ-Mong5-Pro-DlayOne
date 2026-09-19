@@ -81,11 +81,10 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     lpfLeft.prepare (spec);
     lpfRight.prepare (spec);
 
-    // Configura o tipo através da propriedade state
-    hpfLeft.state->type = juce::dsp::StateVariableFilter::Parameters<float>::Type::highPass;
-    hpfRight.state->type = juce::dsp::StateVariableFilter::Parameters<float>::Type::highPass;
-    lpfLeft.state->type = juce::dsp::StateVariableFilter::Parameters<float>::Type::lowPass;
-    lpfRight.state->type = juce::dsp::StateVariableFilter::Parameters<float>::Type::lowPass;
+    hpfLeft.setType (juce::dsp::StateVariableFilter::Parameters<float>::Type::highPass);
+    hpfRight.setType (juce::dsp::StateVariableFilter::Parameters<float>::Type::highPass);
+    lpfLeft.setType (juce::dsp::StateVariableFilter::Parameters<float>::Type::lowPass);
+    lpfRight.setType (juce::dsp::StateVariableFilter::Parameters<float>::Type::lowPass);
 
     lastFeedbackLeft = 0.0f;
     lastFeedbackRight = 0.0f;
@@ -134,11 +133,10 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
     delayLineLeft.setDelay (delayInSamples);
     delayLineRight.setDelay (delayInSamples);
 
-    // Configura a frequência através da função setCutOffFrequency da propriedade state
-    hpfLeft.state->setCutOffFrequency (getSampleRate(), hpfCutoff);
-    hpfRight.state->setCutOffFrequency (getSampleRate(), hpfCutoff);
-    lpfLeft.state->setCutOffFrequency (getSampleRate(), lpfCutoff);
-    lpfRight.state->setCutOffFrequency (getSampleRate(), lpfCutoff);
+    hpfLeft.setCutoffFrequency (hpfCutoff);
+    hpfRight.setCutoffFrequency (hpfCutoff);
+    lpfLeft.setCutoffFrequency (lpfCutoff);
+    lpfRight.setCutoffFrequency (lpfCutoff);
 
     auto* leftChannel  = buffer.getWritePointer (0);
     auto* rightChannel = (buffer.getNumChannels() > 1) ? buffer.getWritePointer (1) : leftChannel;
