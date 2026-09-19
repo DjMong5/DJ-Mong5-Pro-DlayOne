@@ -81,11 +81,11 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     lpfLeft.prepare (spec);
     lpfRight.prepare (spec);
 
-    // Definindo o tipo através de .state->setType()
-    hpfLeft.state->setType (juce::dsp::StateVariableFilter::Parameters<float>::Type::highPass);
-    hpfRight.state->setType (juce::dsp::StateVariableFilter::Parameters<float>::Type::highPass);
-    lpfLeft.state->setType (juce::dsp::StateVariableFilter::Parameters<float>::Type::lowPass);
-    lpfRight.state->setType (juce::dsp::StateVariableFilter::Parameters::Type::lowPass);
+    // Ajustado para setType direto no objeto Filter
+    hpfLeft.setType (juce::dsp::StateVariableFilter::Parameters<float>::Type::highPass);
+    hpfRight.setType (juce::dsp::StateVariableFilter::Parameters<float>::Type::highPass);
+    lpfLeft.setType (juce::dsp::StateVariableFilter::Parameters<float>::Type::lowPass);
+    lpfRight.setType (juce::dsp::StateVariableFilter::Parameters<float>::Type::lowPass);
 
     lastFeedbackLeft = 0.0f;
     lastFeedbackRight = 0.0f;
@@ -134,11 +134,11 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
     delayLineLeft.setDelay (delayInSamples);
     delayLineRight.setDelay (delayInSamples);
 
-    // Definindo a frequência de corte através de .state->setCutOffFrequency()
-    hpfLeft.state->setCutOffFrequency (getSampleRate(), hpfCutoff);
-    hpfRight.state->setCutOffFrequency (getSampleRate(), hpfCutoff);
-    lpfLeft.state->setCutOffFrequency (getSampleRate(), lpfCutoff);
-    lpfRight.state->setCutOffFrequency (getSampleRate(), lpfCutoff);
+    // Ajustado para setCutoffFrequency direto no objeto Filter (apenas a frequência)
+    hpfLeft.setCutoffFrequency (hpfCutoff);
+    hpfRight.setCutoffFrequency (hpfCutoff);
+    lpfLeft.setCutoffFrequency (lpfCutoff);
+    lpfRight.setCutoffFrequency (lpfCutoff);
 
     auto* leftChannel  = buffer.getWritePointer (0);
     auto* rightChannel = (buffer.getNumChannels() > 1) ? buffer.getWritePointer (1) : leftChannel;
@@ -151,6 +151,7 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
         float delayedLeft  = delayLineLeft.popSample (0);
         float delayedRight = delayLineRight.popSample (0);
 
+        // Processa 1 amostra por vez (sem número de canal)
         float feedbackLeftSample  = hpfLeft.processSample (delayedLeft);
         feedbackLeftSample        = lpfLeft.processSample (feedbackLeftSample);
 
