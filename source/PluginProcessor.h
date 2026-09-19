@@ -3,7 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
 
-class PluginProcessor : public juce::AudioProcessor
+class PluginProcessor  : public juce::AudioProcessor
 {
 public:
     PluginProcessor();
@@ -38,16 +38,17 @@ private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::AudioProcessorValueTreeState apvts;
 
-    // --- Módulos DSP ---
+    // --- Módulos DSP do Diagrama ---
     juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear> delayLineLeft { 192000 };
     juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear> delayLineRight { 192000 };
 
-    // Filtros IIR padrão do JUCE (Estável e simples)
-    juce::dsp::IIR::Filter<float> hpfLeft, hpfRight;
-    juce::dsp::IIR::Filter<float> lpfLeft, lpfRight;
+    // Filtros TPT
+    juce::dsp::StateVariableTPTFilter<float> hpfLeft, hpfRight;
+    juce::dsp::StateVariableTPTFilter<float> lpfLeft, lpfRight;
 
-    float lastFeedbackLeft { 0.0f };
-    float lastFeedbackRight { 0.0f };
+    // Memória de Feedback (Substitui variáveis estáticas locais)
+    float feedbackLeftSample  = 0.0f;
+    float feedbackRightSample = 0.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
 };
