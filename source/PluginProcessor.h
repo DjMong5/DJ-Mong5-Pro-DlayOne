@@ -40,11 +40,16 @@ private:
     juce::AudioProcessorValueTreeState apvts;
 
     // --- Módulos DSP ---
-    // Linha de atraso estéreo (Até 2 segundos de delay em 192kHz)
     juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear> delayLineLeft { 192000 };
     juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear> delayLineRight { 192000 };
 
-    // Filtros HPF e LPF no loop de feedback
+    // Ponteiros de parâmetros para os filtros
+    juce::dsp::StateVariableFilter::Parameters<float>::Ptr hpfLeftParams  { new juce::dsp::StateVariableFilter::Parameters<float>() };
+    juce::dsp::StateVariableFilter::Parameters<float>::Ptr hpfRightParams { new juce::dsp::StateVariableFilter::Parameters<float>() };
+    juce::dsp::StateVariableFilter::Parameters<float>::Ptr lpfLeftParams  { new juce::dsp::StateVariableFilter::Parameters<float>() };
+    juce::dsp::StateVariableFilter::Parameters<float>::Ptr lpfRightParams { new juce::dsp::StateVariableFilter::Parameters<float>() };
+
+    // Instâncias dos Filtros
     juce::dsp::StateVariableFilter::Filter<float> hpfLeft, hpfRight;
     juce::dsp::StateVariableFilter::Filter<float> lpfLeft, lpfRight;
 
