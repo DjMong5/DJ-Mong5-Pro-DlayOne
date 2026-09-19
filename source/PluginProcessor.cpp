@@ -90,7 +90,6 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     lpfLeft.reset();
     lpfRight.reset();
 
-    // Reset de segurança do feedback
     feedbackLeftSample = 0.0f;
     feedbackRightSample = 0.0f;
 }
@@ -120,24 +119,29 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // --- POWER / BYPASS ---
-    bool isPowered = apvts.getRawParameterValue ("powerBypass")->load() > 0.5f;
+    // --- LEITURA SEGURA DE PARÂMETROS ---
+    auto getParamValue = [this](const juce::String& paramID, float defaultValue) -> float
+    {
+        auto* param = apvts.getRawParameterValue (paramID);
+        return (param != nullptr) ? param->load() : defaultValue;
+    };
+
+    bool isPowered = getParamValue ("powerBypass", 1.0f) > 0.5f;
     if (!isPowered)
         return; 
 
-    // --- CARREGAMENTO DOS PARÂMETROS ---
-    float inputDriveDb = apvts.getRawParameterValue ("inputDrive")->load();
-    float delayTimeMs  = apvts.getRawParameterValue ("delayTime")->load();
-    float feedbackPct  = apvts.getRawParameterValue ("feedback")->load() / 100.0f;
-    float hpfFreq      = apvts.getRawParameterValue ("hpfCutoff")->load();
-    float lpfFreq      = apvts.getRawParameterValue ("lpfCutoff")->load();
-    float mixPct       = apvts.getRawParameterValue ("mix")->load() / 100.0f;
+    float inputDriveDb = getParamValue ("inputDrive", 0.0f);
+    float delayTimeMs  = getParamValue ("delayTime", 500.0f);
+    float feedbackPct  = getParamValue ("feedback", 30.0f) / 100.0f;
+    float hpfFreq      = getParamValue ("hpfCutoff", 20.0f);
+    float lpfFreq      = getParamValue ("lpfCutoff", 20000.0f);
+    float mixPct       = getParamValue ("mix", 50.0f) / 100.0f;
 
-    bool isPingPong   = apvts.getRawParameterValue ("pingPong")->load() > 0.5f;
-    bool isTempoSync  = apvts.getRawParameterValue ("tempoSync")->load() > 0.5f;
-    bool isSatTape    = apvts.getRawParameterValue ("saturationTape")->load() > 0.5f;
+    bool isPingPong   = getParamValue ("pingPong", 0.0f) > 0.5f;
+    bool isTempoSync  = getParamValue ("tempoSync", 0.0f) > 0.5f;
+    bool isSatTape    = getParamValue ("saturationTape", 0.0f) > 0.5f;
 
-    // --- SYNC MANAGER (MS / BPM / TEMPO SYNC) ---
+    // --- SYNC MANAGER ---
     if (isTempoSync)
     {
         if (auto* playHead = getPlayHead())
@@ -146,7 +150,6 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
             {
                 if (auto bpm = position->getBpm())
                 {
-                    // Sincronia de tempo padrão em semínima (1/4 Note)
                     double quarterNoteMs = (60.0 / *bpm) * 1000.0;
                     delayTimeMs = static_cast<float>(quarterNoteMs);
                 }
@@ -154,7 +157,6 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
         }
     }
 
-    // Atualização dos parâmetros do DSP
     float delaySamples = (delayTimeMs / 1000.0f) * static_cast<float>(getSampleRate());
     delayLineLeft.setDelay (delaySamples);
     delayLineRight.setDelay (delaySamples);
@@ -169,43 +171,35 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
     auto* leftChannel  = buffer.getWritePointer (0);
     auto* rightChannel = (totalNumInputChannels > 1) ? buffer.getWritePointer (1) : leftChannel;
 
-    // Loop de Amostras (DSP Pipeline)
     for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
-        // 1. InputGainBlock (INPUT DRIVE)
         float inL = leftChannel[sample] * driveGain;
         float inR = rightChannel[sample] * driveGain;
 
-        // 2. Delay Line Execution
         delayLineLeft.pushSample (0, inL + feedbackLeftSample);
         delayLineRight.pushSample (0, inR + feedbackRightSample);
 
         float delayedL = delayLineLeft.popSample (0);
         float delayedR = delayLineRight.popSample (0);
 
-        // 3. Feedback Processing & PingPong Logic
         float fbL = delayedL * feedbackPct;
         float fbR = delayedR * feedbackPct;
 
         if (isPingPong)
-            std::swap (fbL, fbR); // Troca os canais L/R para o efeito de Ping-Pong
+            std::swap (fbL, fbR);
 
-        // 4. SaturationTapeFX
         if (isSatTape)
         {
             fbL = std::tanh (fbL * 1.5f);
             fbR = std::tanh (fbR * 1.5f);
         }
 
-        // 5. HPF & LPF Filters (Filtros no Feedback Loop)
         fbL = lpfLeft.processSample (0, hpfLeft.processSample (0, fbL));
         fbR = lpfRight.processSample (0, hpfRight.processSample (0, fbR));
 
-        // Atualização da memória do Feedback
         feedbackLeftSample  = fbL;
         feedbackRightSample = fbR;
 
-        // 6. MixStage (Dry / Wet Output)
         leftChannel[sample]  = inL * (1.0f - mixPct) + delayedL * mixPct;
         if (totalNumInputChannels > 1)
             rightChannel[sample] = inR * (1.0f - mixPct) + delayedR * mixPct;
@@ -213,7 +207,12 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
 }
 
 bool PluginProcessor::hasEditor() const { return true; }
-juce::AudioProcessorEditor* PluginProcessor::createEditor() { return new juce::GenericAudioProcessorEditor (*this); }
+
+// --- INSTANCIAÇÃO DA GUI CUSTOMIZADA ---
+juce::AudioProcessorEditor* PluginProcessor::createEditor() 
+{ 
+    return new PluginEditor (*this); 
+}
 
 void PluginProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
