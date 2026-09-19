@@ -1,74 +1,58 @@
 #pragma once
 
+#include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
-#include "BinaryData.h"
-#include "melatonin_inspector/melatonin_inspector.h"
 
-class PluginEditor : public juce::AudioProcessorEditor
+class PluginEditor  : public juce::AudioProcessorEditor
 {
 public:
-    explicit PluginEditor (PluginProcessor&);
+    PluginEditor (PluginProcessor&);
     ~PluginEditor() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
-    PluginProcessor& processorRef;
+    PluginProcessor& audioProcessor;
 
     // --- Sliders (Knobs) ---
     juce::Slider inputDriveSlider;
-    juce::Label  inputDriveLabel;
-
     juce::Slider delayTimeSlider;
-    juce::Label  delayTimeLabel;
-
     juce::Slider feedbackSlider;
-    juce::Label  feedbackLabel;
-
+    juce::Slider hpfCutoffSlider;
+    juce::Slider lpfCutoffSlider;
     juce::Slider mixSlider;
-    juce::Label  mixLabel;
 
-    juce::Slider hpfSlider;
-    juce::Label  hpfLabel;
+    // --- Labels ---
+    juce::Label inputDriveLabel { {}, "INPUT DRIVE" };
+    juce::Label delayTimeLabel  { {}, "DELAY TIME" };
+    juce::Label feedbackLabel   { {}, "FEEDBACK" };
+    juce::Label hpfCutoffLabel  { {}, "HPF CUTOFF" };
+    juce::Label lpfCutoffLabel  { {}, "LPF CUTOFF" };
+    juce::Label mixLabel        { {}, "MIX" };
 
-    juce::Slider lpfSlider;
-    juce::Label  lpfLabel;
+    // --- Botões do Painel Inferior ---
+    juce::ToggleButton powerBypassButton  { "POWER/BYPASS" };
+    juce::ToggleButton pingPongButton     { "PING PONG" };
+    juce::ToggleButton tempoSyncButton    { "TEMPO SYNC" };
+    juce::ToggleButton saturationButton   { "SATURATION/TAPE" };
 
-    juce::Slider rateModSlider;
-    juce::Label  rateModLabel;
-
-    juce::Slider outputGainSlider;
-    juce::Label  outputGainLabel;
-
-    // --- Botões (Switches) ---
-    juce::ToggleButton powerBypassButton { "Power / Bypass" };
-    juce::ToggleButton pingPongButton    { "Ping Pong" };
-    juce::ToggleButton tempoSyncButton   { "Tempo Sync" };
-    juce::ToggleButton saturationButton  { "Saturation / Tape" };
-
-    // --- Attachments do APVTS ---
+    // --- Attachments APVTS ---
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
     using ButtonAttachment = juce::AudioProcessorValueTreeState::ButtonAttachment;
 
-    std::unique_ptr<SliderAttachment> inputDriveAttachment;
-    std::unique_ptr<SliderAttachment> delayTimeAttachment;
-    std::unique_ptr<SliderAttachment> feedbackAttachment;
-    std::unique_ptr<SliderAttachment> mixAttachment;
-    std::unique_ptr<SliderAttachment> hpfAttachment;
-    std::unique_ptr<SliderAttachment> lpfAttachment;
-    std::unique_ptr<SliderAttachment> rateModAttachment;
-    std::unique_ptr<SliderAttachment> outputGainAttachment;
+    std::unique_ptr<SliderAttachment> inputDriveAttach;
+    std::unique_ptr<SliderAttachment> delayTimeAttach;
+    std::unique_ptr<SliderAttachment> feedbackAttach;
+    std::unique_ptr<SliderAttachment> hpfCutoffAttach;
+    std::unique_ptr<SliderAttachment> lpfCutoffAttach;
+    std::unique_ptr<SliderAttachment> mixAttach;
 
-    std::unique_ptr<ButtonAttachment> powerBypassAttachment;
-    std::unique_ptr<ButtonAttachment> pingPongAttachment;
-    std::unique_ptr<ButtonAttachment> tempoSyncAttachment;
-    std::unique_ptr<ButtonAttachment> saturationAttachment;
-
-    // Ferramenta Melatonin Inspector
-    std::unique_ptr<melatonin::Inspector> inspector;
-    juce::TextButton inspectButton { "Inspect the UI" };
+    std::unique_ptr<ButtonAttachment> powerBypassAttach;
+    std::unique_ptr<ButtonAttachment> pingPongAttach;
+    std::unique_ptr<ButtonAttachment> tempoSyncAttach;
+    std::unique_ptr<ButtonAttachment> saturationAttach;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginEditor)
 };
