@@ -57,11 +57,6 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     rateModAttach    = std::make_unique<SliderAttachment> (apvts, "rateMod",    rateModSlider);
     outputGainAttach = std::make_unique<SliderAttachment> (apvts, "outputGain", outputGainSlider);
 
-    powerBypassAttach = std::make_unique<ButtonAttachment> (apvts, "powerBypass",     powerBypassButton);
-    pingPongAttach    = std::make_unique<ButtonAttachment> (apvts, "pingPong",        pingPongButton);
-    tempoSyncAttach   = std::make_unique<ButtonAttachment> (apvts, "tempoSync",       tempoSyncButton);
-    saturationAttach  = std::make_unique<ButtonAttachment> (apvts, "saturationTape", saturationButton);
-
     // Inicia a atualização contínua da tela LCD a 30 Hz
     startTimerHz (30);
 }
@@ -79,21 +74,29 @@ void PluginEditor::timerCallback()
 
 void PluginEditor::paint (juce::Graphics& g)
 {
-    // Fundo metálico do rack
-    g.fillAll (juce::Colour (0xff2b2d31));
+    // 1. Carrega e desenha a imagem de fundo (Dragões e chassi metálico escovado)
+    auto bgImage = juce::ImageCache::getFromMemory (BinaryData::background_png, BinaryData::background_pngSize);
 
-    // Moldura do chassi
-    g.setColour (juce::Colour (0xff1a1b1e));
-    g.drawRect (getLocalBounds(), 4);
+    if (bgImage.isValid())
+    {
+        g.drawImage (bgImage, getLocalBounds().toFloat());
+    }
+    else
+    {
+        // Fundo alternativo em caso de falha no carregamento
+        g.fillAll (juce::Colour (0xff2b2d31));
+        g.setColour (juce::Colour (0xff1a1b1e));
+        g.drawRect (getLocalBounds(), 4);
+    }
 
-    // Visor Central LCD
+    // 2. Visor Central LCD (Ecrã de informações)
     auto displayArea = juce::Rectangle<int> (310, 80, 380, 120);
     g.setColour (juce::Colours::black);
     g.fillRect (displayArea);
     g.setColour (juce::Colour (0xff4a4e54));
     g.drawRect (displayArea, 2);
 
-    // Leituras dinâmicas do Visor
+    // 3. Leituras dinâmicas do Visor
     float delayTimeMs = delayTimeSlider.getValue();
     bool isSynced = tempoSyncButton.getToggleState();
 
