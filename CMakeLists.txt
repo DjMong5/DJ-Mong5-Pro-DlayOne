@@ -13,7 +13,6 @@ set(BUNDLE_ID "com.djmong5.prodlayone")
 
 set(FORMATS Standalone AU VST3 AUv3)
 
-# Configurações do MSVC para evitar erros de compilação no C++20
 set(CMAKE_POLICY_DEFAULT_CMP0141 NEW CACHE STRING "" FORCE)
 set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded CACHE STRING "" FORCE)
 
@@ -50,7 +49,6 @@ clap_juce_extensions_plugin(TARGET "${PROJECT_NAME}"
 
 pamplejuce_shared_code_defaults()
 
-# Procura os ficheiros C++ tanto em Source/ como em source/ para garantir compatibilidade
 file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS 
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp" 
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h"
@@ -59,8 +57,10 @@ file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS
 )
 target_sources(SharedCode INTERFACE ${SourceFiles})
 
-# Adiciona os assets da pasta assets/ (incluindo o background.png)
-pamplejuce_add_assets()
+# Adiciona os assets com segurança pelo Pamplejuce
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
+    pamplejuce_add_assets()
+endif()
 
 pamplejuce_xcode_prettify()
 
@@ -74,9 +74,16 @@ target_compile_definitions(SharedCode
     PRODUCT_NAME_WITHOUT_VERSION="DJ Mong5 Pro DlayOne"
 )
 
+# Verifica se o target Assets existe antes de fazer o link para evitar falhas de configuração
+if(TARGET Assets)
+    set(ASSETS_TARGET Assets)
+else()
+    set(ASSETS_TARGET "")
+endif()
+
 target_link_libraries(SharedCode
     INTERFACE
-    Assets
+    ${ASSETS_TARGET}
     melatonin_inspector
     juce_audio_utils
     juce_audio_processors
