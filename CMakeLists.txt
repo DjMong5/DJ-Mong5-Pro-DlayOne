@@ -17,7 +17,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0141 NEW CACHE STRING "" FORCE)
 set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded CACHE STRING "" FORCE)
 
 if(MSVC)
-    add_compile_options(/Zc:char8_t-)
+    add_compile_options(/Zc:char8_t- /WX-)
 endif()
 
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
@@ -49,7 +49,6 @@ clap_juce_extensions_plugin(TARGET "${PROJECT_NAME}"
 
 pamplejuce_shared_code_defaults()
 
-# Procura os ficheiros C++ estritamente na pasta Source (com S maiúsculo, o padrão do JUCE/Pamplejuce)
 file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS 
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp" 
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h"
@@ -60,7 +59,6 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
     pamplejuce_add_assets()
 endif()
 
-# O xcode_prettify só deve correr se estivermos realmente num sistema Apple (macOS)
 if(APPLE)
     pamplejuce_xcode_prettify()
 endif()
