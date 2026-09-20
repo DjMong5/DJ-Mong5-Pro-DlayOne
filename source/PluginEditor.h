@@ -3,8 +3,9 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
+#include "CustomLookAndFeel.h"
 
-class PluginEditor  : public juce::AudioProcessorEditor
+class PluginEditor  : public juce::AudioProcessorEditor, private juce::Timer
 {
 public:
     PluginEditor (PluginProcessor&);
@@ -14,23 +15,30 @@ public:
     void resized() override;
 
 private:
-    PluginProcessor& audioProcessor;
+    void timerCallback() override;
 
-    // --- Sliders (Knobs) ---
+    PluginProcessor& audioProcessor;
+    CustomLookAndFeel customLookAndFeel;
+
+    // --- Sliders (8 Knobs) ---
     juce::Slider inputDriveSlider;
     juce::Slider delayTimeSlider;
     juce::Slider feedbackSlider;
+    juce::Slider mixSlider;
     juce::Slider hpfCutoffSlider;
     juce::Slider lpfCutoffSlider;
-    juce::Slider mixSlider;
+    juce::Slider rateModSlider;
+    juce::Slider outputGainSlider;
 
     // --- Labels ---
     juce::Label inputDriveLabel { {}, "INPUT DRIVE" };
     juce::Label delayTimeLabel  { {}, "DELAY TIME" };
     juce::Label feedbackLabel   { {}, "FEEDBACK" };
-    juce::Label hpfCutoffLabel  { {}, "HPF CUTOFF" };
-    juce::Label lpfCutoffLabel  { {}, "LPF CUTOFF" };
     juce::Label mixLabel        { {}, "MIX" };
+    juce::Label hpfCutoffLabel  { {}, "HPF" };
+    juce::Label lpfCutoffLabel  { {}, "LPF" };
+    juce::Label rateModLabel    { {}, "Rate\nMODULATION" };
+    juce::Label outputGainLabel { {}, "OUTPUT GAIN" };
 
     // --- Botões do Painel Inferior ---
     juce::ToggleButton powerBypassButton  { "POWER/BYPASS" };
@@ -45,9 +53,11 @@ private:
     std::unique_ptr<SliderAttachment> inputDriveAttach;
     std::unique_ptr<SliderAttachment> delayTimeAttach;
     std::unique_ptr<SliderAttachment> feedbackAttach;
+    std::unique_ptr<SliderAttachment> mixAttach;
     std::unique_ptr<SliderAttachment> hpfCutoffAttach;
     std::unique_ptr<SliderAttachment> lpfCutoffAttach;
-    std::unique_ptr<SliderAttachment> mixAttach;
+    std::unique_ptr<SliderAttachment> rateModAttach;
+    std::unique_ptr<SliderAttachment> outputGainAttach;
 
     std::unique_ptr<ButtonAttachment> powerBypassAttach;
     std::unique_ptr<ButtonAttachment> pingPongAttach;
