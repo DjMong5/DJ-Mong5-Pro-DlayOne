@@ -49,20 +49,21 @@ clap_juce_extensions_plugin(TARGET "${PROJECT_NAME}"
 
 pamplejuce_shared_code_defaults()
 
+# Procura os ficheiros C++ estritamente na pasta Source (com S maiúsculo, o padrão do JUCE/Pamplejuce)
 file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS 
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp" 
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp" 
-    "${CMAKE_CURRENT_SOURCE_DIR}/source/*.h"
 )
 target_sources(SharedCode INTERFACE ${SourceFiles})
 
-# Adiciona os assets com segurança pelo Pamplejuce
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
     pamplejuce_add_assets()
 endif()
 
-pamplejuce_xcode_prettify()
+# O xcode_prettify só deve correr se estivermos realmente num sistema Apple (macOS)
+if(APPLE)
+    pamplejuce_xcode_prettify()
+endif()
 
 target_compile_definitions(SharedCode
     INTERFACE
@@ -74,7 +75,6 @@ target_compile_definitions(SharedCode
     PRODUCT_NAME_WITHOUT_VERSION="DJ Mong5 Pro DlayOne"
 )
 
-# Verifica se o target Assets existe antes de fazer o link para evitar falhas de configuração
 if(TARGET Assets)
     set(ASSETS_TARGET Assets)
 else()
