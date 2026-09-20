@@ -16,11 +16,17 @@ set(FORMATS Standalone AU VST3 AUv3)
 set(CMAKE_POLICY_DEFAULT_CMP0141 NEW CACHE STRING "" FORCE)
 set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded CACHE STRING "" FORCE)
 
-if(MSVC)
-    add_compile_options(/Zc:char8_t- /WX-)
-endif()
-
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
+
+# Força o MSVC a nunca tratar avisos como erros (corrige a compilação do JUCE)
+if(MSVC)
+    add_compile_options(/Zc:char8_t-)
+    string(REGEX REPLACE "/WX" " /WX-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REGEX REPLACE "/WX" " /WX-" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+    foreach(lang C CXX)
+        set(CMAKE_${lang}_FLAGS "${CMAKE_${lang}_FLAGS} /WX-")
+    endforeach()
+endif()
 
 include(PamplejuceLog)
 include(PamplejuceFunctions)
