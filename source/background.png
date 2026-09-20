@@ -1,0 +1,11 @@
+juce_add_binary_data(AudioPluginAssets
+    SOURCES
+        Source/background.png # (ou Source/Assets/background.png dependendo de onde colocaste)
+)
+
+# Garante que os BinaryData estão ligados ao teu target
+target_link_libraries(DJ-Mong5-Pro-DlayOne
+    PRIVATE
+        AudioPluginAssets
+        juce::juce_audio_utils
+)
