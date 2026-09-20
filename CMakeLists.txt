@@ -21,9 +21,9 @@ set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded CACHE STRING "" FORCE)
 
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 
-# Força o MSVC a nunca tratar avisos como erros (corrige a compilação do JUCE)
+# Força o MSVC a nunca tratar avisos como erros e ignora avisos específicos do JUCE
 if(MSVC)
-    add_compile_options(/Zc:char8_t-)
+    add_compile_options(/Zc:char8_t- /wd4244 /wd4305)
     string(REGEX REPLACE "/WX" " /WX-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     string(REGEX REPLACE "/WX" " /WX-" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
     foreach(lang C CXX)
