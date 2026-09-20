@@ -48,8 +48,10 @@ clap_juce_extensions_plugin(TARGET "${PROJECT_NAME}"
 
 pamplejuce_shared_code_defaults()
 
-# Procura os ficheiros C++ na pasta Source (com S maiúsculo)
-file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h")
+# Procura os ficheiros C++ tanto em Source/ como em source/ para garantir compatibilidade
+file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS 
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/source/*.h")
 target_sources(SharedCode INTERFACE ${SourceFiles})
 
 # Adiciona os assets da pasta assets/ (incluindo o background.png)
