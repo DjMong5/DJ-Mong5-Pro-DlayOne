@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.25)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include (PamplejuceVersion)
 include (CPM)
-include(PamplejuceMacOS)
-include(JUCEDefaults)
+include (PamplejuceMacOS)
+include (JUCEDefaults)
 
 set(PROJECT_NAME "DJMong5ProDlayOne")
 set(PRODUCT_NAME "DJ Mong5 Pro DlayOne")
@@ -28,7 +28,7 @@ include(PamplejuceFunctions)
 
 add_subdirectory(JUCE)
 add_subdirectory(modules/clap-juce-extensions EXCLUDE_FROM_ALL)
-add_subdirectory (modules/melatonin_inspector)
+add_subdirectory(modules/melatonin_inspector)
 
 juce_add_plugin("${PROJECT_NAME}"
     ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/packaging/icon.png"
@@ -38,20 +38,25 @@ juce_add_plugin("${PROJECT_NAME}"
     PLUGIN_MANUFACTURER_CODE Mong
     PLUGIN_CODE Dm01
     FORMATS "${FORMATS}"
-    PRODUCT_NAME "${PRODUCT_NAME}")
+    PRODUCT_NAME "${PRODUCT_NAME}"
+)
 
 add_library(SharedCode INTERFACE)
 
 clap_juce_extensions_plugin(TARGET "${PROJECT_NAME}"
     CLAP_ID "${BUNDLE_ID}"
-    CLAP_FEATURES audio-effect)
+    CLAP_FEATURES audio-effect
+)
 
 pamplejuce_shared_code_defaults()
 
 # Procura os ficheiros C++ tanto em Source/ como em source/ para garantir compatibilidade
 file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS 
-    "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/source/*.h")
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp" 
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp" 
+    "${CMAKE_CURRENT_SOURCE_DIR}/source/*.h"
+)
 target_sources(SharedCode INTERFACE ${SourceFiles})
 
 # Adiciona os assets da pasta assets/ (incluindo o background.png)
@@ -80,7 +85,8 @@ target_link_libraries(SharedCode
     juce_gui_extra
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
-    juce::juce_recommended_warning_flags)
+    juce::juce_recommended_warning_flags
+)
 
 target_link_libraries("${PROJECT_NAME}" PRIVATE SharedCode)
 
