@@ -5,7 +5,8 @@
 #include "PluginProcessor.h"
 #include "CustomLookAndFeel.h"
 
-class PluginEditor  : public juce::AudioProcessorEditor, private juce::Timer
+class PluginEditor : public juce::AudioProcessorEditor,
+                     private juce::Timer
 {
 public:
     PluginEditor (PluginProcessor&);
@@ -13,10 +14,9 @@ public:
 
     void paint (juce::Graphics&) override;
     void resized() override;
-
-private:
     void timerCallback() override;
 
+private:
     PluginProcessor& audioProcessor;
     CustomLookAndFeel customLookAndFeel;
 
@@ -41,10 +41,10 @@ private:
     juce::Label outputGainLabel { {}, "OUTPUT GAIN" };
 
     // --- Botões do Painel Inferior ---
-    juce::ToggleButton powerBypassButton  { "POWER/BYPASS" };
-    juce::ToggleButton pingPongButton     { "PING PONG" };
-    juce::ToggleButton tempoSyncButton    { "TEMPO SYNC" };
-    juce::ToggleButton saturationButton   { "SATURATION/TAPE" };
+    juce::ToggleButton powerBypassButton { "POWER/BYPASS" };
+    juce::ToggleButton pingPongButton    { "PING PONG" };
+    juce::ToggleButton tempoSyncButton   { "TEMPO SYNC" };
+    juce::ToggleButton saturationButton  { "SATURATION/TAPE" };
 
     // --- Attachments APVTS ---
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
