@@ -30,7 +30,7 @@ if(MSVC)
         set(CMAKE_${lang}_FLAGS "${CMAKE_${lang}_FLAGS} /WX-")
     endforeach()
 else()
-    add_compile_options(-Wno-error)
+    add_compile_options(-Wno-error -Wno-nan-infinity-disabled)
 endif()
 
 include(PamplejuceLog)
