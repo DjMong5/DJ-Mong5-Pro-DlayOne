@@ -26,6 +26,9 @@ if(MSVC)
     add_compile_options(/Zc:char8_t- /wd4244 /wd4305 /wd4756 /wd4456 /wd4457 /wd4100 /wd4996)
     add_compile_options(/fp:precise)
     
+    # Desativa explicitamente o tratamento de warnings como erros no MSVC
+    add_compile_options(/WX-)
+    
     string(REGEX REPLACE "/WX" " /WX-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     string(REGEX REPLACE "/WX" " /WX-" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
     
