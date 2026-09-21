@@ -21,9 +21,11 @@ set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded CACHE STRING "" FORCE)
 
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 
-# Desativa erros por avisos (evita que warnings de ponto flutuante quebrem o CI em qualquer SO)
+# Desativa erros de ponto flutuante e avisos restritos do MSVC e outras plataformas
 if(MSVC)
-    add_compile_options(/Zc:char8_t- /wd4244 /wd4305 /wd4756)
+    add_compile_options(/Zc:char8_t- /wd4244 /wd4305 /wd4756 /wd4456 /wd4457 /wd4100)
+    # Adiciona a flag do MSVC para ignorar avisos de ponto flutuante/infinito
+    add_compile_options(/fp:precise)
     string(REGEX REPLACE "/WX" " /WX-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     string(REGEX REPLACE "/WX" " /WX-" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
     foreach(lang C CXX)
@@ -40,7 +42,7 @@ add_subdirectory(JUCE)
 add_subdirectory(modules/clap-juce-extensions EXCLUDE_FROM_ALL)
 add_subdirectory(modules/melatonin_inspector)
 
-# 1. Criação oficial dos dados binários do JUCE para gerar o namespace BinaryData
+# 1. Criação oficial dos dados binários como PluginBinaryData
 set(BINARY_DATA_TARGET "")
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images")
     file(GLOB_RECURSE ImageFiles CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images/*.*")
@@ -90,7 +92,7 @@ target_compile_definitions(SharedCode
     PRODUCT_NAME_WITHOUT_VERSION="DJ Mong5 Pro DlayOne"
 )
 
-# 2. Vinculação segura do binário para todas as plataformas (Linux, macOS, Windows)
+# 2. Vinculação segura do binário para todas as plataformas
 if(NOT "${BINARY_DATA_TARGET}" STREQUAL "")
     target_link_libraries(SharedCode INTERFACE ${BINARY_DATA_TARGET})
     target_link_libraries("${PROJECT_NAME}" PRIVATE ${BINARY_DATA_TARGET})
