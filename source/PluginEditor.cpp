@@ -75,7 +75,7 @@ void PluginEditor::timerCallback()
 void PluginEditor::paint (juce::Graphics& g)
 {
     // 1. Carrega e desenha a imagem de fundo (Dragões e chassi metálico escovado)
-    auto bgImage = juce::ImageCache::getFromMemory (BinaryData::background_png, BinaryData::background_pngSize);
+    auto bgImage = juce::ImageCache::getFromMemory (PluginBinaryData::background_png, PluginBinaryData::background_pngSize);
 
     if (bgImage.isValid())
     {
