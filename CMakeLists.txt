@@ -62,8 +62,8 @@ juce_add_plugin("${PROJECT_NAME}"
     PLUGIN_CODE Dm01
     FORMATS "${FORMATS}"
     PRODUCT_NAME "${PRODUCT_NAME}"
-    # Vincula diretamente os binários aqui para garantir que o BinaryData seja gerado no escopo do plugin
-    EXTRA_BINARY_DATA AudioPluginData
+    # CORREÇÃO: O parâmetro correto do JUCE para dados binários é BINARY_DATA_TARGET
+    BINARY_DATA_TARGET AudioPluginData
 )
 
 add_library(SharedCode INTERFACE)
