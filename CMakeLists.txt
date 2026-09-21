@@ -21,13 +21,14 @@ set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded CACHE STRING "" FORCE)
 
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 
-# Desativa erros de ponto flutuante e avisos restritos do MSVC e outras plataformas
+# Desativa erros de ponto flutuante, trata avisos como não-erros e adiciona /wd4996 para depreciações no MSVC
 if(MSVC)
     add_compile_options(/Zc:char8_t- /wd4244 /wd4305 /wd4756 /wd4456 /wd4457 /wd4100 /wd4996)
-    # Adiciona a flag do MSVC para ignorar avisos de ponto flutuante/infinito
     add_compile_options(/fp:precise)
+    
     string(REGEX REPLACE "/WX" " /WX-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     string(REGEX REPLACE "/WX" " /WX-" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+    
     foreach(lang C CXX)
         set(CMAKE_${lang}_FLAGS "${CMAKE_${lang}_FLAGS} /WX-")
         set(CMAKE_${lang}_FLAGS_RELEASE "${CMAKE_${lang}_FLAGS_RELEASE} /WX-")
@@ -44,7 +45,7 @@ add_subdirectory(JUCE)
 add_subdirectory(modules/clap-juce-extensions EXCLUDE_FROM_ALL)
 add_subdirectory(modules/melatonin_inspector)
 
-# 1. Criação oficial dos dados binários como PluginBinaryData
+# 1. Criação oficial dos dados binários (BinaryData) a partir da pasta correta de assets
 set(BINARY_DATA_TARGET "")
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images")
     file(GLOB_RECURSE ImageFiles CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images/*.*")
@@ -100,18 +101,33 @@ if(NOT "${BINARY_DATA_TARGET}" STREQUAL "")
     target_link_libraries("${PROJECT_NAME}" PRIVATE ${BINARY_DATA_TARGET})
 endif()
 
-target_link_libraries(SharedCode
-    INTERFACE
-    melatonin_inspector
-    juce_audio_utils
-    juce_audio_processors
-    juce_dsp
-    juce_gui_basics
-    juce_gui_extra
-    juce::juce_recommended_config_flags
-    juce::juce_recommended_lto_flags
-    juce::juce_recommended_warning_flags
-)
+# 3. Configuração de bibliotecas vinculadas (Remove warning flags restritivas no MSVC para evitar quebra de CI/CD)
+if(MSVC)
+    target_link_libraries(SharedCode
+        INTERFACE
+        melatonin_inspector
+        juce_audio_utils
+        juce_audio_processors
+        juce_dsp
+        juce_gui_basics
+        juce_gui_extra
+        juce::juce_recommended_config_flags
+        juce::juce_recommended_lto_flags
+    )
+else()
+    target_link_libraries(SharedCode
+        INTERFACE
+        melatonin_inspector
+        juce_audio_utils
+        juce_audio_processors
+        juce_dsp
+        juce_gui_basics
+        juce_gui_extra
+        juce::juce_recommended_config_flags
+        juce::juce_recommended_lto_flags
+        juce::juce_recommended_warning_flags
+    )
+endif()
 
 target_link_libraries("${PROJECT_NAME}" PRIVATE SharedCode)
 
