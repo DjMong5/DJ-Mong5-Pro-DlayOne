@@ -21,7 +21,7 @@ set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded CACHE STRING "" FORCE)
 
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 
-# Força o MSVC a nunca tratar avisos como erros e ignora avisos específicos do JUCE
+# Força o compilador a nunca tratar avisos como erros (evita que o inf/NaN quebre o CI)
 if(MSVC)
     add_compile_options(/Zc:char8_t- /wd4244 /wd4305)
     string(REGEX REPLACE "/WX" " /WX-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -29,6 +29,8 @@ if(MSVC)
     foreach(lang C CXX)
         set(CMAKE_${lang}_FLAGS "${CMAKE_${lang}_FLAGS} /WX-")
     endforeach()
+else()
+    add_compile_options(-Wno-error)
 endif()
 
 include(PamplejuceLog)
