@@ -66,7 +66,7 @@ file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS
 )
 target_sources(SharedCode INTERFACE ${SourceFiles})
 
-# Atualizado para ler os recursos de dentro de assets/images
+# Configura corretamente a pasta assets/images existente
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images")
     file(GLOB ImageFiles CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images/*.*")
     juce_add_binary_data(Assets SOURCES ${ImageFiles})
