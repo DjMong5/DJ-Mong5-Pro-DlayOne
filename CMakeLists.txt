@@ -66,8 +66,10 @@ file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS
 )
 target_sources(SharedCode INTERFACE ${SourceFiles})
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
-    pamplejuce_add_assets()
+# Atualizado para ler os recursos de dentro de assets/images
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images")
+    file(GLOB ImageFiles CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images/*.*")
+    juce_add_binary_data(Assets SOURCES ${ImageFiles})
 endif()
 
 if(APPLE)
