@@ -21,13 +21,17 @@ set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded CACHE STRING "" FORCE)
 
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 
-# Desativa erros de ponto flutuante, trata avisos como não-erros e adiciona supressões avançadas do MSVC
+# Desativa erros de ponto flutuante, trata avisos como não-erros e adiciona supressões avançadas do MSVC/Clang-cl
 if(MSVC)
     add_compile_options(/Zc:char8_t- /wd4244 /wd4305 /wd4756 /wd4456 /wd4457 /wd4100 /wd4996 /wd4267 /wd4018 /wd4459)
     add_compile_options(/fp:precise)
     
-    # Desativa explicitamente o tratamento de warnings como erros no MSVC
-    add_compile_options(/WX-)
+    # Se o GitHub Actions estiver usando Clang-cl no Windows, desativa erros/warnings estritos globais
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        add_compile_options(-Wno-everything)
+    else()
+        add_compile_options(/WX-)
+    endif()
     
     string(REGEX REPLACE "/WX" " /WX-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     string(REGEX REPLACE "/WX" " /WX-" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
