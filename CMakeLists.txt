@@ -40,6 +40,14 @@ add_subdirectory(JUCE)
 add_subdirectory(modules/clap-juce-extensions EXCLUDE_FROM_ALL)
 add_subdirectory(modules/melatonin_inspector)
 
+# 1. Criação dos dados binários para o JUCE reconhecer o BinaryData globalmente
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images")
+    file(GLOB_RECURSE ImageFiles CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images/*.*")
+    if(ImageFiles)
+        juce_add_binary_data(AudioPluginData SOURCES ${ImageFiles})
+    endif()
+endif()
+
 juce_add_plugin("${PROJECT_NAME}"
     ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/packaging/icon.png"
     COMPANY_NAME "${COMPANY_NAME}"
@@ -66,12 +74,6 @@ file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS
 )
 target_sources(SharedCode INTERFACE ${SourceFiles})
 
-# Configura corretamente a pasta assets/images existente
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images")
-    file(GLOB ImageFiles CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images/*.*")
-    juce_add_binary_data(Assets SOURCES ${ImageFiles})
-endif()
-
 if(APPLE)
     pamplejuce_xcode_prettify()
 endif()
@@ -86,15 +88,16 @@ target_compile_definitions(SharedCode
     PRODUCT_NAME_WITHOUT_VERSION="DJ Mong5 Pro DlayOne"
 )
 
-if(TARGET Assets)
-    set(ASSETS_TARGET Assets)
+# Define a dependência de binários de forma segura
+if(TARGET AudioPluginData)
+    set(BINARY_DATA_TARGET AudioPluginData)
 else()
-    set(ASSETS_TARGET "")
+    set(BINARY_DATA_TARGET "")
 endif()
 
 target_link_libraries(SharedCode
     INTERFACE
-    ${ASSETS_TARGET}
+    ${BINARY_DATA_TARGET}
     melatonin_inspector
     juce_audio_utils
     juce_audio_processors
