@@ -21,7 +21,7 @@ set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded CACHE STRING "" FORCE)
 
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 
-# Força o compilador a nunca tratar avisos como erros e desativa avisos de ponto flutuante
+# Desativa erros por avisos (evita que warnings de ponto flutuante quebrem o CI em qualquer SO)
 if(MSVC)
     add_compile_options(/Zc:char8_t- /wd4244 /wd4305 /wd4756)
     string(REGEX REPLACE "/WX" " /WX-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -40,17 +40,14 @@ add_subdirectory(JUCE)
 add_subdirectory(modules/clap-juce-extensions EXCLUDE_FROM_ALL)
 add_subdirectory(modules/melatonin_inspector)
 
-# 1. Criação dos dados binários (Assets) antes da declaração do plugin
-set(ASSETS_SOURCES)
+# 1. Criação oficial dos dados binários do JUCE para gerar o namespace BinaryData
+set(BINARY_DATA_TARGET "")
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images")
     file(GLOB_RECURSE ImageFiles CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images/*.*")
     if(ImageFiles)
-        list(APPEND ASSETS_SOURCES ${ImageFiles})
+        juce_add_binary_data(PluginBinaryData SOURCES ${ImageFiles})
+        set(BINARY_DATA_TARGET PluginBinaryData)
     endif()
-endif()
-
-if(ASSETS_SOURCES)
-    juce_add_binary_data(AudioPluginData SOURCES ${ASSETS_SOURCES})
 endif()
 
 juce_add_plugin("${PROJECT_NAME}"
@@ -62,8 +59,6 @@ juce_add_plugin("${PROJECT_NAME}"
     PLUGIN_CODE Dm01
     FORMATS "${FORMATS}"
     PRODUCT_NAME "${PRODUCT_NAME}"
-    # CORREÇÃO: O parâmetro correto do JUCE para dados binários é BINARY_DATA_TARGET
-    BINARY_DATA_TARGET AudioPluginData
 )
 
 add_library(SharedCode INTERFACE)
@@ -95,9 +90,14 @@ target_compile_definitions(SharedCode
     PRODUCT_NAME_WITHOUT_VERSION="DJ Mong5 Pro DlayOne"
 )
 
+# 2. Vinculação segura do binário para todas as plataformas (Linux, macOS, Windows)
+if(NOT "${BINARY_DATA_TARGET}" STREQUAL "")
+    target_link_libraries(SharedCode INTERFACE ${BINARY_DATA_TARGET})
+    target_link_libraries("${PROJECT_NAME}" PRIVATE ${BINARY_DATA_TARGET})
+endif()
+
 target_link_libraries(SharedCode
     INTERFACE
-    AudioPluginData
     melatonin_inspector
     juce_audio_utils
     juce_audio_processors
