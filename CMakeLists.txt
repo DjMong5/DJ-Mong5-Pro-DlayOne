@@ -1,134 +1,52 @@
-cmake_minimum_required(VERSION 3.25)
+juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParameterLayout()
+{
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "inputDrive", 1 }, "Input Drive", 
+        juce::NormalisableRange<float> (0.0f, 24.0f, 0.1f), 0.0f));
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-include (PamplejuceVersion)
-include (CPM)
-include (PamplejuceMacOS)
-include (JUCEDefaults)
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "delayTime", 1 }, "Delay Time", 
+        juce::NormalisableRange<float> (0.0f, 2000.0f, 1.0f), 500.0f));
 
-set(PROJECT_NAME "DJMong5ProDlayOne")
-set(PRODUCT_NAME "DJ Mong5 Pro DlayOne")
-set(COMPANY_NAME "DJ Mong5")
-set(BUNDLE_ID "com.djmong5.prodlayone")
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "feedback", 1 }, "Feedback", 
+        juce::NormalisableRange<float> (0.0f, 100.0f, 0.1f), 30.0f));
 
-# Evita que o helper do VST3 quebre a linkagem no Windows CI
-if(WIN32)
-    set(FORMATS Standalone CLAP)
-else()
-    set(FORMATS Standalone AU VST3 AUv3)
-endif()
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "hpfCutoff", 1 }, "HPF Cutoff", 
+        juce::NormalisableRange<float> (20.0f, 2000.0f, 1.0f, 0.4f), 20.0f));
 
-set(CMAKE_POLICY_DEFAULT_CMP0141 NEW CACHE STRING "" FORCE)
-set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded CACHE STRING "" FORCE)
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "lpfCutoff", 1 }, "LPF Cutoff", 
+        juce::NormalisableRange<float> (500.0f, 20000.0f, 1.0f, 0.4f), 20000.0f));
 
-project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "mix", 1 }, "Mix", 
+        juce::NormalisableRange<float> (0.0f, 100.0f, 1.0f), 50.0f));
 
-# Desativa erros de ponto flutuante, trata avisos como não-erros e adiciona supressões avançadas do MSVC/Clang-cl
-if(MSVC)
-    add_compile_options(/Zc:char8_t- /wd4244 /wd4305 /wd4756 /wd4456 /wd4457 /wd4100 /wd4996 /wd4267 /wd4018 /wd4459)
-    add_compile_options(/fp:precise)
-    
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        add_compile_options(-Wno-everything)
-    else()
-        add_compile_options(/WX-)
-    endif()
-    
-    string(REGEX REPLACE "/WX" " /WX-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    string(REGEX REPLACE "/WX" " /WX-" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-    
-    foreach(lang C CXX)
-        set(CMAKE_${lang}_FLAGS "${CMAKE_${lang}_FLAGS} /WX-")
-        set(CMAKE_${lang}_FLAGS_RELEASE "${CMAKE_${lang}_FLAGS_RELEASE} /WX-")
-        set(CMAKE_${lang}_FLAGS_DEBUG "${CMAKE_${lang}_FLAGS_DEBUG} /WX-")
-    endforeach()
-else()
-    add_compile_options(-Wno-error -Wno-nan-infinity-disabled)
-endif()
+    // --- PARÂMETROS ALINHADOS COM O PLUGIN EDITOR ---
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "rateMod", 1 }, "Rate Modulation", 
+        juce::NormalisableRange<float> (0.1f, 20.0f, 0.1f, 1.0f), 1.0f));
 
-include(PamplejuceLog)
-include(PamplejuceFunctions)
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "outputGain", 1 }, "Output Gain", 
+        juce::NormalisableRange<float> (-24.0f, 24.0f, 0.1f), 0.0f));
+    // -----------------------------------------------
 
-add_subdirectory(JUCE)
-add_subdirectory(modules/clap-juce-extensions EXCLUDE_FROM_ALL)
-add_subdirectory(modules/melatonin_inspector)
+    params.push_back (std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { "powerBypass", 1 }, "Power/Bypass", true));
 
-juce_add_plugin("${PROJECT_NAME}"
-    ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/packaging/icon.png"
-    COMPANY_NAME "${COMPANY_NAME}"
-    BUNDLE_ID "${BUNDLE_ID}"
-    COPY_PLUGIN_AFTER_BUILD TRUE
-    PLUGIN_MANUFACTURER_CODE Mong
-    PLUGIN_CODE Dm01
-    FORMATS "${FORMATS}"
-    PRODUCT_NAME "${PRODUCT_NAME}"
-)
+    params.push_back (std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { "pingPong", 1 }, "Ping Pong", false));
 
-# Garante que os recursos rc sejam linkados corretamente no Windows
-if(WIN32 AND TARGET "${PROJECT_NAME}_rc_lib")
-    target_link_libraries("${PROJECT_NAME}" PRIVATE "${PROJECT_NAME}_rc_lib")
-endif()
+    params.push_back (std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { "tempoSync", 1 }, "Tempo Sync", false));
 
-add_library(SharedCode INTERFACE)
+    params.push_back (std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { "saturationTape", 1 }, "Saturation/Tape", false));
 
-clap_juce_extensions_plugin(TARGET "${PROJECT_NAME}"
-    CLAP_ID "${BUNDLE_ID}"
-    CLAP_FEATURES audio-effect
-)
-
-pamplejuce_shared_code_defaults()
-
-file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS 
-    "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp" 
-    "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h"
-)
-target_sources(SharedCode INTERFACE ${SourceFiles})
-
-if(APPLE)
-    pamplejuce_xcode_prettify()
-endif()
-
-target_compile_definitions(SharedCode
-    INTERFACE
-    JUCE_WEB_BROWSER=0
-    JUCE_USE_CURL=0
-    JUCE_VST3_CAN_REPLACE_VST2=0
-    CMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
-    VERSION="${CURRENT_VERSION}"
-    PRODUCT_NAME_WITHOUT_VERSION="DJ Mong5 Pro DlayOne"
-)
-
-if(MSVC)
-    target_link_libraries(SharedCode
-        INTERFACE
-        melatonin_inspector
-        juce_audio_utils
-        juce_audio_processors
-        juce_dsp
-        juce_gui_basics
-        juce_gui_extra
-        juce::juce_recommended_config_flags
-        juce::juce_recommended_lto_flags
-    )
-else()
-    target_link_libraries(SharedCode
-        INTERFACE
-        melatonin_inspector
-        juce_audio_utils
-        juce_audio_processors
-        juce_dsp
-        juce_gui_basics
-        juce_gui_extra
-        juce::juce_recommended_config_flags
-        juce::juce_recommended_lto_flags
-        juce::juce_recommended_warning_flags
-    )
-endif()
-
-target_link_libraries("${PROJECT_NAME}" PRIVATE SharedCode)
-
-include(PamplejuceIPP)
-include(GitHubENV)
+    return { params.begin(), params.end() };
+}
