@@ -48,6 +48,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParam
         juce::ParameterID { "mix", 1 }, "Mix", 
         juce::NormalisableRange<float> (0.0f, 100.0f, 1.0f), 50.0f));
 
+    // Parâmetros alinhados com o PluginEditor.h / .cpp
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "rateMod", 1 }, "Rate Modulation", 
+        juce::NormalisableRange<float> (0.1f, 20.0f, 0.1f, 1.0f), 1.0f));
+
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "outputGain", 1 }, "Output Gain", 
+        juce::NormalisableRange<float> (-24.0f, 24.0f, 0.1f), 0.0f));
+
     params.push_back (std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "powerBypass", 1 }, "Power/Bypass", true));
 
@@ -130,12 +139,14 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
     if (!isPowered)
         return; 
 
-    float inputDriveDb = getParamValue ("inputDrive", 0.0f);
-    float delayTimeMs  = getParamValue ("delayTime", 500.0f);
-    float feedbackPct  = getParamValue ("feedback", 30.0f) / 100.0f;
-    float hpfFreq      = getParamValue ("hpfCutoff", 20.0f);
-    float lpfFreq      = getParamValue ("lpfCutoff", 20000.0f);
-    float mixPct       = getParamValue ("mix", 50.0f) / 100.0f;
+    float inputDriveDb  = getParamValue ("inputDrive", 0.0f);
+    float delayTimeMs   = getParamValue ("delayTime", 500.0f);
+    float feedbackPct   = getParamValue ("feedback", 30.0f) / 100.0f;
+    float hpfFreq       = getParamValue ("hpfCutoff", 20.0f);
+    float lpfFreq       = getParamValue ("lpfCutoff", 20000.0f);
+    float mixPct        = getParamValue ("mix", 50.0f) / 100.0f;
+    float rateModVal    = getParamValue ("rateMod", 1.0f);
+    float outputGainDb  = getParamValue ("outputGain", 0.0f);
 
     bool isPingPong   = getParamValue ("pingPong", 0.0f) > 0.5f;
     bool isTempoSync  = getParamValue ("tempoSync", 0.0f) > 0.5f;
@@ -166,7 +177,8 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
     lpfLeft.setCutoffFrequency (lpfFreq);
     lpfRight.setCutoffFrequency (lpfFreq);
 
-    float driveGain = juce::Decibels::decibelsToGain (inputDriveDb);
+    float driveGain  = juce::Decibels::decibelsToGain (inputDriveDb);
+    float outputGain = juce::Decibels::decibelsToGain (outputGainDb);
 
     auto* leftChannel  = buffer.getWritePointer (0);
     auto* rightChannel = (totalNumInputChannels > 1) ? buffer.getWritePointer (1) : leftChannel;
@@ -200,15 +212,15 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
         feedbackLeftSample  = fbL;
         feedbackRightSample = fbR;
 
-        leftChannel[sample]  = inL * (1.0f - mixPct) + delayedL * mixPct;
+        // Processa mix dry/wet e aplica o ganho de saída final
+        leftChannel[sample]  = (inL * (1.0f - mixPct) + delayedL * mixPct) * outputGain;
         if (totalNumInputChannels > 1)
-            rightChannel[sample] = inR * (1.0f - mixPct) + delayedR * mixPct;
+            rightChannel[sample] = (inR * (1.0f - mixPct) + delayedR * mixPct) * outputGain;
     }
 }
 
 bool PluginProcessor::hasEditor() const { return true; }
 
-// --- INSTANCIAÇÃO DA GUI CUSTOMIZADA ---
 juce::AudioProcessorEditor* PluginProcessor::createEditor() 
 { 
     return new PluginEditor (*this); 
