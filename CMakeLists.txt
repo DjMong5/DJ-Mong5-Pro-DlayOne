@@ -67,6 +67,11 @@ juce_add_plugin("${PROJECT_NAME}"
     PRODUCT_NAME "${PRODUCT_NAME}"
 )
 
+# Garante que os recursos rc sejam linkados corretamente no Windows
+if(WIN32 AND TARGET "${PROJECT_NAME}_rc_lib")
+    target_link_libraries("${PROJECT_NAME}" PRIVATE "${PROJECT_NAME}_rc_lib")
+endif()
+
 add_library(SharedCode INTERFACE)
 
 clap_juce_extensions_plugin(TARGET "${PROJECT_NAME}"
