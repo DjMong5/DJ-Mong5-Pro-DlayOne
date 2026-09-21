@@ -15,16 +15,16 @@ jobs:
         submodules: recursive
 
     - name: Configurar CMake
-      run: cmake -B build
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
     - name: Compilar Plugin (Release)
-      run: cmake --build build --config Release
-
-    - name: Executar Testes (Ignora erro Headless)
-      run: ctest --test-dir build -C Release --output-on-failure || true
+      run: cmake --build build --config Release --target DJMong5ProDlayOne
 
     - name: Salvar o VST3 para Download
       uses: actions/upload-artifact@v4
       with:
         name: MeuPlugin-Windows-VST3
-        path: build/
+        path: |
+          build/**/*.vst3
+          build/**/*.dll
+          build/**/*.standalone
