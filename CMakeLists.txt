@@ -26,7 +26,6 @@ if(MSVC)
     add_compile_options(/Zc:char8_t- /wd4244 /wd4305 /wd4756 /wd4456 /wd4457 /wd4100 /wd4996 /wd4267 /wd4018 /wd4459)
     add_compile_options(/fp:precise)
     
-    # Se o GitHub Actions estiver usando Clang-cl no Windows, desativa erros/warnings estritos globais
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-Wno-everything)
     else()
@@ -51,16 +50,6 @@ include(PamplejuceFunctions)
 add_subdirectory(JUCE)
 add_subdirectory(modules/clap-juce-extensions EXCLUDE_FROM_ALL)
 add_subdirectory(modules/melatonin_inspector)
-
-# 1. Criação oficial dos dados binários (BinaryData) a partir da pasta correta de assets
-set(BINARY_DATA_TARGET "")
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images")
-    file(GLOB_RECURSE ImageFiles CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/images/*.*")
-    if(ImageFiles)
-        juce_add_binary_data(PluginBinaryData SOURCES ${ImageFiles})
-        set(BINARY_DATA_TARGET PluginBinaryData)
-    endif()
-endif()
 
 juce_add_plugin("${PROJECT_NAME}"
     ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/packaging/icon.png"
@@ -102,13 +91,6 @@ target_compile_definitions(SharedCode
     PRODUCT_NAME_WITHOUT_VERSION="DJ Mong5 Pro DlayOne"
 )
 
-# 2. Vinculação segura do binário para todas as plataformas
-if(NOT "${BINARY_DATA_TARGET}" STREQUAL "")
-    target_link_libraries(SharedCode INTERFACE ${BINARY_DATA_TARGET})
-    target_link_libraries("${PROJECT_NAME}" PRIVATE ${BINARY_DATA_TARGET})
-endif()
-
-# 3. Configuração de bibliotecas vinculadas (Remove warning flags restritivas no MSVC para evitar quebra de CI/CD)
 if(MSVC)
     target_link_libraries(SharedCode
         INTERFACE
