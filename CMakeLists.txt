@@ -14,7 +14,12 @@ set(PRODUCT_NAME "DJ Mong5 Pro DlayOne")
 set(COMPANY_NAME "DJ Mong5")
 set(BUNDLE_ID "com.djmong5.prodlayone")
 
-set(FORMATS Standalone AU VST3 AUv3)
+# Evita que o helper do VST3 quebre a linkagem no Windows CI
+if(WIN32)
+    set(FORMATS Standalone CLAP)
+else()
+    set(FORMATS Standalone AU VST3 AUv3)
+endif()
 
 set(CMAKE_POLICY_DEFAULT_CMP0141 NEW CACHE STRING "" FORCE)
 set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded CACHE STRING "" FORCE)
