@@ -23,13 +23,15 @@ project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 
 # Desativa erros de ponto flutuante e avisos restritos do MSVC e outras plataformas
 if(MSVC)
-    add_compile_options(/Zc:char8_t- /wd4244 /wd4305 /wd4756 /wd4456 /wd4457 /wd4100)
+    add_compile_options(/Zc:char8_t- /wd4244 /wd4305 /wd4756 /wd4456 /wd4457 /wd4100 /wd4996)
     # Adiciona a flag do MSVC para ignorar avisos de ponto flutuante/infinito
     add_compile_options(/fp:precise)
     string(REGEX REPLACE "/WX" " /WX-" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     string(REGEX REPLACE "/WX" " /WX-" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
     foreach(lang C CXX)
         set(CMAKE_${lang}_FLAGS "${CMAKE_${lang}_FLAGS} /WX-")
+        set(CMAKE_${lang}_FLAGS_RELEASE "${CMAKE_${lang}_FLAGS_RELEASE} /WX-")
+        set(CMAKE_${lang}_FLAGS_DEBUG "${CMAKE_${lang}_FLAGS_DEBUG} /WX-")
     endforeach()
 else()
     add_compile_options(-Wno-error -Wno-nan-infinity-disabled)
